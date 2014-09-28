@@ -28,7 +28,7 @@ mach_vm_address_t main_addr = lorgnette_lookup(mach_task_self(), "main");
 assert(dlsym(RTLD_DEFAULT, "main") == main_addr);
 ```
 
-Otherwise it will inspect any foreign task you have rights to control (`task_for_pid` isn't
+Or it will inspect any alien task you have rights to control (`task_for_pid` isn't
 for everyone, you know):  
 
 ```c
