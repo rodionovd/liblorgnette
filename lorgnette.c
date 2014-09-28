@@ -393,11 +393,12 @@ static char *_copyin_string(task_t task, mach_vm_address_t pointer)
      */
     // FIXME: what about the size of this buffer?
     // Users can requst symbols with very long names (e.g. C++ mangled method names, etc)
-    char buf[kRemoteStringBufferSize] = {'\0'};
+    char buf[kRemoteStringBufferSize];
     mach_vm_size_t sample_size = sizeof(buf);
     err = mach_vm_read_overwrite(task, pointer, sample_size,
                                  (mach_vm_address_t)&buf, &sample_size);
     assert(err == KERN_SUCCESS);
+    buf[kRemoteStringBufferSize-1] = '\0';
 
     char *result = strdup(buf);
     return result;
