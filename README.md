@@ -19,7 +19,7 @@ See [`CoreSymbolication`](#coresymbolication) section of this file.
 ### Usage
 
 If the target is a `mach_task_self()` then `lorgnette_lookup()` will act like `dlsym()`. 
-But unlike `dlsym()` it can be used to locate not-exported symbols.  
+But unlike `dlsym()` it can be used to locate unexported symbols.  
 
 ```c
 #include "lorgnette.h"
