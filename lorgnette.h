@@ -9,7 +9,7 @@
 #pragma once
 /**
  * @abstract
- * Look ap a symbol adress inside an arbitrary process' address space.
+ * Look up a symbol adress inside an arbitrary process' address space.
  *
  * @note
  * This function iterates local symbols first and only then it looks for symbols

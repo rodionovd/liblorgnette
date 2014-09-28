@@ -95,7 +95,7 @@ mach_vm_address_t lorgnette_lookup(task_t target, const char *symbol_name)
         };
     }
     free(headers);
-    /* Apply a slide if our target image was a library from the dyld shared cache */
+    /* Add a slide if our target image was a library from the dyld shared cache */
     if (imageFromSharedCache) {
         result += shared_cache_slide;
     }

@@ -63,7 +63,7 @@ void test_remote_function_lookup(void)
     // then
     assert(err == KERN_SUCCESS);
     assert(remote_dlopen_addr > 0);
-//    fprintf(stderr, "Remote dlopen @ 0x%llx, local @ %p\n", remote_dlopen_addr, dlsym(RTLD_DEFAULT, "dlopen"));
+//    fprintf(stderr, "Remote dlopen @ %p, local @ %p\n", (void *)remote_dlopen_addr, dlsym(RTLD_DEFAULT, "dlopen"));
 }
 
 
