@@ -221,7 +221,6 @@ fail:
     return KERN_FAILURE;
 }
 
-
 /**
  *
  */
