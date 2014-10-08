@@ -327,8 +327,8 @@ mach_vm_address_t _scan_remote_image_for_symbol(task_t task,
 
             uint64_t symname_addr = strings + sym.n_un.n_strx;
             char *symname = _copyin_string(task, symname_addr);
-            /* Also try ignoring the leading "_" character in a symbol name */
-            if (0 == strcmp(symbol_name, symname) || 0 == strcmp(symbol_name, symname+1)) {
+            /* Ignore the leading "_" character in a symbol name */
+            if (0 == strcmp(symbol_name, symname+1)) {
                 free(symname);
                 return (mach_vm_address_t)sym.n_value;
             }
@@ -359,8 +359,8 @@ mach_vm_address_t _scan_remote_image_for_symbol(task_t task,
 
             uint32_t symname_addr = strings + sym.n_un.n_strx;
             char *symname = _copyin_string(task, symname_addr);
-            /* Also try ignoring the leading "_" character in a symbol name */
-            if (0 == strcmp(symbol_name, symname) || 0 == strcmp(symbol_name, symname+1)) {
+            /* Ignore the leading "_" character in a symbol name */
+            if (0 == strcmp(symbol_name, symname+1)) {
                 free(symname);
                 return (mach_vm_address_t)sym.n_value;
             }
