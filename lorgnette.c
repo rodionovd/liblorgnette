@@ -318,7 +318,7 @@ mach_vm_address_t _scan_remote_image_for_symbol(task_t task,
         uint64_t sym_addr = remote_header + symtab.symoff + file_slide;
 
         for (uint32_t i = 0; i < symtab.nsyms; i++) {
-            struct nlist_64 sym = {0};
+            struct nlist_64 sym = {{0}};
             size = sizeof(struct nlist_64);
             err = mach_vm_read_overwrite(task, sym_addr, size, (mach_vm_address_t)&sym, &size);
             RDFailOnError("mach_vm_read_overwrite", fail);
@@ -350,7 +350,7 @@ mach_vm_address_t _scan_remote_image_for_symbol(task_t task,
         uint32_t sym_addr = (uint32_t)remote_header + symtab.symoff + file_slide;
 
         for (uint32_t i = 0; i < symtab.nsyms; i++) {
-            struct nlist sym = {0};
+            struct nlist sym = {{0}};
             size = sizeof(struct nlist);
             err = mach_vm_read_overwrite(task, sym_addr, size, (mach_vm_address_t)&sym, &size);
             RDFailOnError("mach_vm_read_overwrite", fail);
