@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <syslog.h>
 #include <stdbool.h>
+#include <mach/mach_vm.h>
 #include <mach-o/dyld.h>
 #include <mach-o/nlist.h>
 #include <mach-o/loader.h>
