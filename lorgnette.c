@@ -182,7 +182,11 @@ int _image_headers_from_dyld_info64(task_t target,
     bool should_find_particular_image = (suggested_image_name != NULL);
     if (headers) {
         for (uint32_t i = 0; i < *count; i++) {
-            if (!should_find_particular_image) {
+            /// FIXME: Find a real location of the first image path
+            /* We have to always include the first image in the headers list
+             * because an image filepath's address is slided with an unknown offset,
+             * so we can't read the image name directly. */
+            if (!should_find_particular_image || i == 0) {
                 headers[i] = (mach_vm_address_t)array[i].imageLoadAddress;
             } else {
                 char *image_name = _copyin_string(target, array[i].imageFilePath);
@@ -191,7 +195,12 @@ int _image_headers_from_dyld_info64(task_t target,
                     strcmp(suggested_image_name, basename(image_name));
                 });
                 free(image_name);
-                headers[i] = not_found ? 0 : (mach_vm_address_t)array[i].imageLoadAddress;
+                if (not_found) {
+                    headers[i] = 0;
+                } else {
+                    headers[i] = (mach_vm_address_t)array[i].imageLoadAddress;
+                    break;
+                }
             }
         }
     }
@@ -235,7 +244,11 @@ int _image_headers_from_dyld_info32(task_t target,
     bool should_find_particular_image = (suggested_image_name != NULL);
     if (headers) {
         for (uint32_t i = 0; i < *count; i++) {
-            if (!should_find_particular_image) {
+            /// FIXME: Find a real location of the first image path
+            /* We have to always include the first image in the headers list
+             * because an image filepath's address is slided with an unknown offset,
+             * so we can't read the image name directly. */
+            if (!should_find_particular_image || i == 0) {
                 headers[i] = (mach_vm_address_t)array[i].imageLoadAddress;
             } else {
                 char *image_name = _copyin_string(target, array[i].imageFilePath);
@@ -244,7 +257,12 @@ int _image_headers_from_dyld_info32(task_t target,
                     strcmp(suggested_image_name, basename(image_name));
                 });
                 free(image_name);
-                headers[i] = not_found ? 0x0 : (mach_vm_address_t)array[i].imageLoadAddress;
+                if (not_found) {
+                    headers[i] = 0;
+                } else {
+                    headers[i] = (mach_vm_address_t)array[i].imageLoadAddress;
+                    break;
+                }
             }
         }
     }
