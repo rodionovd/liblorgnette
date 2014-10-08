@@ -22,22 +22,22 @@ void test_local_function_lookup(void)
 {
     // given
     task_t self = mach_task_self();
+    const char *image = "demo_function";
     // when
-    mach_vm_address_t demo_function_addr = lorgnette_lookup(self, "demo_function");
-    mach_vm_address_t main_addr = lorgnette_lookup(self, "main");
+    mach_vm_address_t lookup = lorgnette_lookup(self, image);
     // then
-    assert((mach_vm_address_t)dlsym(RTLD_DEFAULT, "demo_function") == demo_function_addr);
-    assert((mach_vm_address_t)dlsym(RTLD_DEFAULT, "main") == main_addr);
+    assert((mach_vm_address_t)dlsym(RTLD_DEFAULT, image) == lookup);
 }
 
 void test_local_function_lookup_from_image(void)
 {
     // given
     task_t self = mach_task_self();
+    const char *symbol = "main";
     const char *image = progname;
     // when
-    mach_vm_address_t simple_lookup = lorgnette_lookup(self, "main");
-    mach_vm_address_t image_lookup = lorgnette_lookup_image(self, "main", image);
+    mach_vm_address_t simple_lookup = lorgnette_lookup(self, symbol);
+    mach_vm_address_t image_lookup = lorgnette_lookup_image(self, symbol, image);
     // then
     assert(simple_lookup == image_lookup);
 }
@@ -46,34 +46,35 @@ void test_local_sharedcached_function_lookup(void)
 {
     // given
     task_t self = mach_task_self();
+    const char *symbol = "fprintf";
     // when
-    mach_vm_address_t fprintf_addr = lorgnette_lookup(self, "fprintf");
-    mach_vm_address_t dlopen_addr = lorgnette_lookup(self, "dlopen");
+    mach_vm_address_t lookup = lorgnette_lookup(self, symbol);
     // then
-    assert((mach_vm_address_t)dlsym(RTLD_DEFAULT, "fprintf") == fprintf_addr);
-    assert((mach_vm_address_t)dlsym(RTLD_DEFAULT, "dlopen") == dlopen_addr);
+    assert((mach_vm_address_t)dlsym(RTLD_DEFAULT, symbol) == lookup);
 }
 
 void test_local_sharedcached_function_lookup_from_image(void)
 {
     // given
     task_t self = mach_task_self();
-    const char *fprintf_image = "libsystem_c.dylib";
+    const char *symbol = "fprintf";
+    const char *image = "libsystem_c.dylib";
     // when
-    mach_vm_address_t fprintf_simple_lookup = lorgnette_lookup(self, "fprintf");
-    mach_vm_address_t fprintf_image_lookup = lorgnette_lookup_image(self, "fprintf", fprintf_image);
+    mach_vm_address_t simple_lookup = lorgnette_lookup(self, symbol);
+    mach_vm_address_t image_lookup = lorgnette_lookup_image(self, symbol, image);
     // then
-    assert(fprintf_simple_lookup == fprintf_image_lookup);
+    assert(simple_lookup == image_lookup);
 }
 
 void test_local_linked_library_function_lookup(void)
 {
     // given
     task_t self = mach_task_self();
+    const char *symbol = "curl_easy_init";
     // when
-    mach_vm_address_t curl_easy_init_addr = lorgnette_lookup(self, "curl_easy_init");
+    mach_vm_address_t lookup = lorgnette_lookup(self, symbol);
     // then
-    assert((mach_vm_address_t)&curl_easy_init == curl_easy_init_addr);
+    assert((mach_vm_address_t)dlsym(RTLD_DEFAULT, symbol) == lookup);
 }
 
 #pragma mark - Remote tests
@@ -82,19 +83,20 @@ void test_remote_function_lookup(void)
 {
     // given
     task_t target;
+    const char *symbol = "dlopen";
     int err = KERN_FAILURE;
     // when
     err = task_for_pid(mach_task_self(), 1 /* launchd */, &target);
-    mach_vm_address_t remote_dlopen_addr = lorgnette_lookup(target, "dlopen");
+    mach_vm_address_t lookup = lorgnette_lookup(target, symbol);
     // then
     assert(err == KERN_SUCCESS);
-    assert(remote_dlopen_addr > 0);
+    assert(lookup > 0);
 #if defined(__x86_64__)
     /* Since libdyld is a part of dyld shared cache, both local
      * and remote addresses should be the same.
      * launchd is x86_64 on any modern OS, so we only perform this check
      * if our host is x86_64 too. */
-    assert((mach_vm_address_t)dlsym(RTLD_DEFAULT, "dlopen") == remote_dlopen_addr);
+    assert((mach_vm_address_t)dlsym(RTLD_DEFAULT, symbol) == lookup);
 #endif
 }
 
@@ -102,12 +104,13 @@ void test_remote_function_lookup_image(void)
 {
     // given
     task_t target;
-    const char *image = "libdyld.dylib";
+    const char *symbol = "dlopen";
+    const char *image  = "libdyld.dylib";
     int err = KERN_FAILURE;
     // when
     err = task_for_pid(mach_task_self(), 1 /* launchd */, &target);
-    mach_vm_address_t simple_remote_lookup = lorgnette_lookup(target, "dlopen");
-    mach_vm_address_t remote_lookup_image = lorgnette_lookup_image(target, "dlopen", image);
+    mach_vm_address_t simple_remote_lookup = lorgnette_lookup(target, symbol);
+    mach_vm_address_t remote_lookup_image  = lorgnette_lookup_image(target, symbol, image);
     // then
     assert(err == KERN_SUCCESS);
     assert(simple_remote_lookup == remote_lookup_image);
