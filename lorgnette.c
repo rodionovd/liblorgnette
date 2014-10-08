@@ -96,7 +96,7 @@ mach_vm_address_t lorgnette_lookup(task_t target, const char *symbol_name)
     }
     free(headers);
     /* Add a slide if our target image was a library from the dyld shared cache */
-    if (imageFromSharedCache) {
+    if (imageFromSharedCache && result > 0) {
         result += shared_cache_slide;
     }
 
