@@ -59,14 +59,12 @@ void test_local_sharedcached_function_lookup_from_image(void)
     // given
     task_t self = mach_task_self();
     const char *fprintf_image = "libsystem_c.dylib";
-//    const char *dlopen_image = "libdyld.dylib";
     // when
     mach_vm_address_t fprintf_simple_lookup = lorgnette_lookup(self, "fprintf");
     mach_vm_address_t fprintf_image_lookup = lorgnette_lookup_image(self, "fprintf", fprintf_image);
     // then
     assert(fprintf_simple_lookup == fprintf_image_lookup);
 }
-
 
 void test_local_linked_library_function_lookup(void)
 {
@@ -99,7 +97,6 @@ void test_remote_function_lookup(void)
     assert((mach_vm_address_t)dlsym(RTLD_DEFAULT, "dlopen") == remote_dlopen_addr);
 #endif
 }
-
 
 void test_remote_function_lookup_image(void)
 {
