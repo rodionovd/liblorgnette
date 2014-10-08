@@ -91,7 +91,13 @@ void test_remote_function_lookup(void)
     // then
     assert(err == KERN_SUCCESS);
     assert(remote_dlopen_addr > 0);
-//    fprintf(stderr, "Remote dlopen @ %p, local @ %p\n", (void *)remote_dlopen_addr, dlsym(RTLD_DEFAULT, "dlopen"));
+#if defined(__x86_64__)
+    /* Since libdyld is a part of dyld shared cache, both local
+     * and remote addresses should be the same.
+     * launchd is x86_64 on any modern OS, so we only perform this check
+     * if our host is x86_64 too. */
+    assert((mach_vm_address_t)dlsym(RTLD_DEFAULT, "dlopen") == remote_dlopen_addr);
+#endif
 }
 
 
