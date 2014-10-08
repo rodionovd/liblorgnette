@@ -77,6 +77,30 @@ void test_local_linked_library_function_lookup(void)
     assert((mach_vm_address_t)dlsym(RTLD_DEFAULT, symbol) == lookup);
 }
 
+/* As for OS X 10.9 there're two system libraries that contain _pthread_set_self symbol:
+ * (1) libsystem_kernel.dylib and (2) libsystem_pthread.dylib.
+ * In the former one is a no-op function while the latter holds the real symbol.
+ *
+ * Since libsystem_kernel.dylib gets loaded *before* libsystem_pthread.dylib,
+ * lorgnette_lookup() consumes its (no-op) variant of _pthread_set_self, so if we want to
+ * get a real function address, we must specify the right image. */
+void test_pthread_set_self_lookup_image(void)
+{
+    // given
+    task_t self = mach_task_self();
+    const char *symbol = "_pthread_set_self";
+    const char *image_pthread = "libsystem_pthread.dylib";
+    const char *image_kernel  = "libsystem_kernel.dylib";
+    // when
+    mach_vm_address_t simple_lookup = lorgnette_lookup(self, symbol);
+    mach_vm_address_t kernel_image_lookup  = lorgnette_lookup_image(self, symbol, image_kernel);
+    mach_vm_address_t pthread_image_lookup = lorgnette_lookup_image(self, symbol, image_pthread);
+    // then
+    assert(simple_lookup != pthread_image_lookup);
+    assert(simple_lookup == kernel_image_lookup);
+    assert((mach_vm_address_t)dlsym(RTLD_DEFAULT, symbol) == pthread_image_lookup);
+}
+
 #pragma mark - Remote tests
 
 void test_remote_function_lookup(void)
@@ -135,6 +159,7 @@ main(int argc, const char * argv[])
     test_local_sharedcached_function_lookup();
     test_local_sharedcached_function_lookup_from_image();
     test_local_linked_library_function_lookup();
+    test_pthread_set_self_lookup_image();
 
     /* Remote tests */
     test_remote_function_lookup();
