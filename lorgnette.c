@@ -161,6 +161,8 @@ int _image_headers_from_dyld_info64(task_t target,
                                     uint64_t *shared_cache_slide)
 {
     assert(count);
+    assert(shared_cache_slide);
+
     int err = KERN_FAILURE;
     struct dyld_all_image_infos_64 infos;
     mach_vm_size_t size = dyld_info.all_image_info_size;
@@ -169,6 +171,8 @@ int _image_headers_from_dyld_info64(task_t target,
     RDFailOnError("mach_vm_read_overwrite()", fail);
 
     *count = infos.infoArrayCount;
+    *shared_cache_slide = infos.sharedCacheSlide;
+    
     size = sizeof(struct dyld_image_info_64) * (*count);
     struct dyld_image_info_64 *array = malloc((size_t)size);
     err = mach_vm_read_overwrite(target, (mach_vm_address_t)infos.infoArray, size,
@@ -190,10 +194,6 @@ int _image_headers_from_dyld_info64(task_t target,
                 headers[i] = not_found ? 0 : (mach_vm_address_t)array[i].imageLoadAddress;
             }
         }
-
-    }
-    if (shared_cache_slide) {
-        *shared_cache_slide = infos.sharedCacheSlide;
     }
 
     free(array);
