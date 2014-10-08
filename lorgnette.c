@@ -19,6 +19,7 @@
 #include <dlfcn.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <syslog.h>
 #include <stdbool.h>
 #include <mach-o/dyld.h>
 #include <mach-o/nlist.h>
@@ -31,7 +32,7 @@
 #define RDFailOnError(function, label) \
     do { \
         if (err != KERN_SUCCESS) { \
-            fprintf(stderr, "[%d] %s failed with error: %s [%d]\n", \
+            syslog(LOG_NOTICE, "[%d] %s failed with error: %s [%d]\n", \
                     __LINE__-1, function, mach_error_string(err), err); \
             goto label; \
         } \
@@ -244,7 +245,7 @@ mach_vm_address_t _scan_remote_image_for_symbol(task_t task,
 
     /* We don't support anything but i386 and x86_64 */
     if (header.magic != MH_MAGIC && header.magic != MH_MAGIC_64) {
-        fprintf(stderr, "liblorgnette ERROR: found image with unsupported architecture"
+        syslog(LOG_NOTICE, "liblorgnette ERROR: found image with unsupported architecture"
                 "at %p, skipping it.\n", (void *)remote_header);
         return 0;
     }
@@ -289,7 +290,7 @@ mach_vm_address_t _scan_remote_image_for_symbol(task_t task,
     }
 
     if (!symtab_addr || !linkedit_addr || !text_addr) {
-        fprintf(stderr, "Invalid Mach-O image header, skipping...\n");
+        syslog(LOG_NOTICE, "Invalid Mach-O image header, skipping...\n");
         return 0;
     }
 
