@@ -19,6 +19,7 @@
 #include <dlfcn.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <libgen.h>
 #include <syslog.h>
 #include <stdbool.h>
 #include <mach/mach_vm.h>
@@ -47,9 +48,11 @@
 #define ki386DefaultBaseAddress 0x1000
 #define kx86_64DefaultBaseAddress 0x100000000
 
-static int _image_headers_in_task(task_t, mach_vm_address_t*, uint32_t*, uint64_t*);
-static int _image_headers_from_dyld_info32(task_t, task_dyld_info_data_t, uint32_t*, uint64_t*, uint64_t *);
-static int _image_headers_from_dyld_info64(task_t, task_dyld_info_data_t, uint32_t*, uint64_t*, uint64_t *);
+static int _image_headers_in_task(task_t, const char *, mach_vm_address_t*, uint32_t*, uint64_t*);
+static int _image_headers_from_dyld_info32(task_t, task_dyld_info_data_t, const char*, uint32_t*,
+                                           uint64_t*, uint64_t *);
+static int _image_headers_from_dyld_info64(task_t, task_dyld_info_data_t, const char*, uint32_t*,
+                                           uint64_t*, uint64_t *);
 static mach_vm_address_t _scan_remote_image_for_symbol(task_t, mach_vm_address_t, const char *, bool *);
 static char *_copyin_string(task_t, mach_vm_address_t);
 
@@ -58,19 +61,24 @@ static char *_copyin_string(task_t, mach_vm_address_t);
 
 mach_vm_address_t lorgnette_lookup(task_t target, const char *symbol_name)
 {
+    return lorgnette_lookup_image(target, symbol_name, NULL);
+}
+
+mach_vm_address_t lorgnette_lookup_image(task_t target, const char *symbol_name, const char *image_name)
+{
     assert(symbol_name);
     assert(strlen(symbol_name) > 0);
 
     int err = KERN_SUCCESS;
     uint32_t count = 0;
     uint64_t shared_cache_slide = 0x0;
-    err = _image_headers_in_task(target, NULL, &count, &shared_cache_slide);
+    err = _image_headers_in_task(target, image_name, NULL, &count, &shared_cache_slide);
     if (err != KERN_SUCCESS) {
         return 0;
     }
 
     mach_vm_address_t *headers = malloc(sizeof(*headers) * count);
-    err =_image_headers_in_task(target, headers, &count, &shared_cache_slide);
+    err =_image_headers_in_task(target, image_name, headers, &count, &shared_cache_slide);
     if (err != KERN_SUCCESS) {
         free(headers);
         return 0;
@@ -121,6 +129,7 @@ mach_vm_address_t lorgnette_lookup(task_t target, const char *symbol_name)
  */
 static
 int _image_headers_in_task(task_t task,
+                           const char *suggested_image_name,
                            mach_vm_address_t *headers,
                            uint32_t *count,
                            uint64_t *shared_cache_slide)
@@ -132,9 +141,11 @@ int _image_headers_in_task(task_t task,
     RDFailOnError("task_info()", fail);
 
     if (data.all_image_info_format == TASK_DYLD_ALL_IMAGE_INFO_32) {
-        return _image_headers_from_dyld_info32(task, data, count, headers, shared_cache_slide);
+        return _image_headers_from_dyld_info32(task, data, suggested_image_name, count,
+                                               headers, shared_cache_slide);
     } else {
-        return _image_headers_from_dyld_info64(task, data, count, headers, shared_cache_slide);
+        return _image_headers_from_dyld_info64(task, data, suggested_image_name, count,
+                                               headers, shared_cache_slide);
     }
 
 fail:
@@ -144,6 +155,7 @@ fail:
 static
 int _image_headers_from_dyld_info64(task_t target,
                                     task_dyld_info_data_t dyld_info,
+                                    const char *suggested_image_name,
                                     uint32_t *count,
                                     uint64_t *headers,
                                     uint64_t *shared_cache_slide)
@@ -163,10 +175,22 @@ int _image_headers_from_dyld_info64(task_t target,
                                  (mach_vm_address_t)array, &size);
     RDFailOnError("mach_vm_read_overwrite()", fail);
 
+    bool should_find_particular_image = (suggested_image_name != NULL);
     if (headers) {
         for (uint32_t i = 0; i < *count; i++) {
-            headers[i] = (mach_vm_address_t)array[i].imageLoadAddress;
+            if (!should_find_particular_image) {
+                headers[i] = (mach_vm_address_t)array[i].imageLoadAddress;
+            } else {
+                char *image_name = _copyin_string(target, array[i].imageFilePath);
+                bool not_found = ({
+                    strcmp(suggested_image_name, image_name) &&
+                    strcmp(suggested_image_name, basename(image_name));
+                });
+                free(image_name);
+                headers[i] = not_found ? 0 : (mach_vm_address_t)array[i].imageLoadAddress;
+            }
         }
+
     }
     if (shared_cache_slide) {
         *shared_cache_slide = infos.sharedCacheSlide;
@@ -184,6 +208,7 @@ fail:
 static
 int _image_headers_from_dyld_info32(task_t target,
                                     task_dyld_info_data_t dyld_info,
+                                    const char *suggested_image_name,
                                     uint32_t *count,
                                     uint64_t *headers,
                                     uint64_t *shared_cache_slide)
@@ -207,9 +232,20 @@ int _image_headers_from_dyld_info32(task_t target,
                                  (mach_vm_address_t)array, &size);
     RDFailOnError("mach_vm_read_overwrite()", fail);
 
+    bool should_find_particular_image = (suggested_image_name != NULL);
     if (headers) {
         for (uint32_t i = 0; i < *count; i++) {
-            headers[i] = (mach_vm_address_t)array[i].imageLoadAddress;
+            if (!should_find_particular_image) {
+                headers[i] = (mach_vm_address_t)array[i].imageLoadAddress;
+            } else {
+                char *image_name = _copyin_string(target, array[i].imageFilePath);
+                bool not_found = ({
+                    strcmp(suggested_image_name, image_name) &&
+                    strcmp(suggested_image_name, basename(image_name));
+                });
+                free(image_name);
+                headers[i] = not_found ? 0x0 : (mach_vm_address_t)array[i].imageLoadAddress;
+            }
         }
     }
 
@@ -231,9 +267,12 @@ mach_vm_address_t _scan_remote_image_for_symbol(task_t task,
                                                 bool *imageFromSharedCache)
 {
     assert(symbol_name);
-    assert(remote_header > 0);
     assert(imageFromSharedCache);
     int err = KERN_FAILURE;
+
+    if (remote_header == 0) {
+        return 0;
+    }
 
     mach_vm_size_t size = sizeof(struct mach_header);
     struct mach_header header = {0};
