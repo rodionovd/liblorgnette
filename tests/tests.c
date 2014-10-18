@@ -1,20 +1,15 @@
 //
-//  main.c
-//  lorgnette_demo
-//
-//  Created by Dmitry Rodionov on 9/24/14.
-//  Copyright (c) 2014 rodionovd. All rights reserved.
+//  tests.c
+//  liblorgnette
 //
 #include <stdio.h>
 #include <assert.h>
-/* For tests */
 #include <dlfcn.h>
 #include <libgen.h>
 #include <curl/curl.h>
+#include "../lorgnette.h"
 
-#include "lorgnette.h"
-
-const char *progname = NULL;
+extern char ***_NSGetArgv(void);
 
 #pragma mark - Local tests
 
@@ -34,7 +29,7 @@ void test_local_function_lookup_from_image(void)
     // given
     task_t self = mach_task_self();
     const char *symbol = "main";
-    const char *image = progname;
+    const char *image = basename((*_NSGetArgv())[0]);
     // when
     mach_vm_address_t simple_lookup = lorgnette_lookup(self, symbol);
     mach_vm_address_t image_lookup = lorgnette_lookup_image(self, symbol, image);
@@ -151,8 +146,6 @@ demo_function(void)
 int __attribute__ ((visibility ("default")))
 main(int argc, const char * argv[])
 {
-    progname = basename((char *)argv[0]);
-    
     /* Local tests */
     test_local_function_lookup();
     test_local_function_lookup_from_image();
@@ -164,6 +157,6 @@ main(int argc, const char * argv[])
     /* Remote tests */
     test_remote_function_lookup();
     test_remote_function_lookup_image();
-    
+
     return 0;
 }
