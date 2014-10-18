@@ -2,7 +2,7 @@ task :default => [:cleanup]
 
 # Configuration
 SOURCES = "tests.c ../lorgnette.c"
-SHARED_CCFLAGS = "-std=c99"
+SHARED_CCFLAGS = "-std=c99 -lcurl"
 NEEDS_SUDO = true
 
 specs = [
