@@ -6,15 +6,15 @@ SHARED_CCFLAGS = "-std=c99"
 NEEDS_SUDO = true
 
 specs = [
-	{ :compiler => "clang", :arch => "i386",   :ccflags => "-O0", :result => true },
-	{ :compiler => "clang", :arch => "i386",   :ccflags => "-O3", :result => true },
-	{ :compiler => "clang", :arch => "x86_64", :ccflags => "-O0", :result => true },
-	{ :compiler => "clang", :arch => "x86_64", :ccflags => "-O3", :result => true },
+	{ :compiler => "clang", :arch => "i386",   :ccflags => "-O0" },
+	{ :compiler => "clang", :arch => "i386",   :ccflags => "-O3" },
+	{ :compiler => "clang", :arch => "x86_64", :ccflags => "-O0" },
+	{ :compiler => "clang", :arch => "x86_64", :ccflags => "-O3" },
 
-	{ :compiler => "gcc", :arch => "i386",   :ccflags => "-O0", :result => true },
-	{ :compiler => "gcc", :arch => "i386",   :ccflags => "-O3", :result => true },
-	{ :compiler => "gcc", :arch => "x86_64", :ccflags => "-O0", :result => true },
-	{ :compiler => "gcc", :arch => "x86_64", :ccflags => "-O3", :result => true },
+	{ :compiler => "gcc", :arch => "i386",   :ccflags => "-O0" },
+	{ :compiler => "gcc", :arch => "i386",   :ccflags => "-O3" },
+	{ :compiler => "gcc", :arch => "x86_64", :ccflags => "-O0" },
+	{ :compiler => "gcc", :arch => "x86_64", :ccflags => "-O3" },
 ]
 
 desc "Build test cases using clang and gcc compilers for i386 and x86_64 architectures"
@@ -22,7 +22,9 @@ task :build do
 	system("mkdir build") if (!File.exists?(Dir.getwd + "/build"))
 	specs.each {|entry|
 		system("#{entry[:compiler]} -arch #{entry[:arch]} #{SHARED_CCFLAGS} #{entry[:ccflags]} -o ./build/#{filename_for_spec(entry)} #{SOURCES}")
-		if $?.exitstatus != 0 then
+		if $?.exitstatus == 0 then
+			# entry[:result] = false;
+		else
 			entry[:result] = false;
 			puts "Fail to compile tests (#{outfile})".red
 		end
