@@ -4,6 +4,7 @@
 ╩═╝└─┘┴└─└─┘┘└┘└─┘ ┴  ┴ └─┘    ┴ ┴ ┴└─┘    ┴─┘┴└─┘
 
 ```
+[![Build Status](https://travis-ci.org/rodionovd/liblorgnette.svg?branch=master)](https://travis-ci.org/rodionovd/liblorgnette)  
 
 `Lorgnette` is a library for locating symbols of any running process on OS X. 
 It acts just like `dlsym()` but not limited to the current process, allowing you to examine
