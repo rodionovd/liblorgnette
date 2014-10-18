@@ -114,8 +114,13 @@ void test_remote_function_lookup(void)
     /* Since libdyld is a part of dyld shared cache, both local
      * and remote addresses should be the same.
      * launchd is x86_64 on any modern OS, so we only perform this check
-     * if our host is x86_64 too. */
-    assert((mach_vm_address_t)dlsym(RTLD_DEFAULT, symbol) == lookup);
+     * if our host is x86_64 too.
+     *
+     * UPDATE:
+     * As it turns out there *may not be* any shared cache at all, so this
+     * assert will fail.
+     */
+    // assert((mach_vm_address_t)dlsym(RTLD_DEFAULT, symbol) == lookup);
 #endif
 }
 

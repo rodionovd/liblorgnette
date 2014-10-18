@@ -100,6 +100,19 @@ mach_vm_address_t lorgnette_lookup_image(task_t target, const char *symbol_name,
                 }
                 /* The header pointer already have ASLR slice included */
                 result += headers[0];
+            } else if (!imageFromSharedCache) {
+            	/**
+            	 * On some setups dyld shared cache doesn't contain some system libraries.
+            	 * In this case we have to append a base_address+ASLR value to the result.
+            	 */
+            	if (headers[i] > kx86_64DefaultBaseAddress && result < kx86_64DefaultBaseAddress) {
+            		/* x86_64 target */
+            		result += headers[i];
+            	}
+            	if (headers[i] < kx86_64DefaultBaseAddress && result < ki386DefaultBaseAddress) {
+            		/* i386 target */
+            		result += headers[i];
+            	}
             }
             break;
         };
