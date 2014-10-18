@@ -21,8 +21,7 @@ desc "Build test cases using clang and gcc compilers for i386 and x86_64 archite
 task :build do
 	system("mkdir build") if (!File.exists?(Dir.getwd + "/build"))
 	specs.each {|entry|
-		outfile = "#{entry[:compiler]}_#{entry[:arch]}_#{entry[:ccflags].delete(' ')}"
-		system("#{entry[:compiler]} -arch #{entry[:arch]} #{SHARED_CCFLAGS} #{entry[:ccflags]} -o ./build/#{outfile} #{SOURCES}")
+		system("#{entry[:compiler]} -arch #{entry[:arch]} #{SHARED_CCFLAGS} #{entry[:ccflags]} -o ./build/#{filename_for_spec(entry)} #{SOURCES}")
 		if $?.exitstatus != 0 then
 			entry[:result] = false;
 			puts "Fail to compile tests (#{outfile})".red
@@ -34,9 +33,8 @@ desc "Run test cases"
 task :execute => [:build] do
 	specs.each {|entry|
 		if entry[:result] != false then
-			executable = "#{entry[:compiler]}_#{entry[:arch]}_#{entry[:ccflags].delete(' ')}"
 			sudo_prefix = "sudo " if NEEDS_SUDO
-			system("#{sudo_prefix}./build/#{executable}")
+			system("#{sudo_prefix}./build/#{filename_for_spec(entry)}")
 			entry[:result] = false if $?.exitstatus != 0
 
 			status = entry[:result] == true ? "OK".green : "FAIL".red
@@ -55,6 +53,11 @@ task :cleanup => [:execute] do
 	else
 		exit (0)
 	end
+end
+
+
+def filename_for_spec(s)
+	"#{s[:compiler]}_#{s[:arch]}#{s[:ccflags].delete(' ')}"
 end
 
 # Colors, Rainbows, Unicorns!
