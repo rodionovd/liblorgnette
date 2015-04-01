@@ -6,14 +6,9 @@
 ```
 [![Build Status](https://travis-ci.org/rodionovd/liblorgnette.svg?branch=master)](https://travis-ci.org/rodionovd/liblorgnette)  
 
-`Lorgnette` is a library for locating symbols of any running process on OS X. 
-It acts just like `dlsym()` but not limited to the current process, allowing you to examine
-any running program on your system.   
+`Lorgnette` enables you to lookup symbols on OS X and iOS *(jailbreak is required, though)*. It works for both local and remote symbols (i.e. symbols within an alien process address space). So you may think about it as `dlsym()` without «the current process symbols only» and «won't find unexported symbols» limitations.
 
-
-> If you're wondering whether there's any other way to accomplish this task: **yes, there's one!**  
-OS X contains a private Apple framework called `CoreSymbolication` that can be used to locate symbols
-in any running task on the system and even more.  
+> OS X contains a private framework called `CoreSymbolication` that can be used to locate symbols in any running task on the system and even more. I believe that it has something to do with `dtrace`.   
 So if you need something production-ready (heh), you should use the Apple thing instead of `liblorgnette`.  
 See [`CoreSymbolication`](#coresymbolication) section of this file.  
 
