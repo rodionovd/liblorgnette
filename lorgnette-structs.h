@@ -49,8 +49,14 @@ struct dyld_all_image_infos_32 {
 	uint32_t errorTargetDylibPath;
 	uint32_t errorSymbol;
 	uint32_t sharedCacheSlide;
-	uint8_t	 sharedCacheUUID[16];
-	uint32_t reserved[16];
+	uint8_t  sharedCacheUUID[16];
+	uint32_t sharedCacheBaseAddress;
+	uint64_t infoArrayChangeTimestamp;
+	uint32_t dyldPath;
+	uint32_t notifyMachPorts[8];
+	uint32_t reserved[5];
+	uint32_t compact_dyld_image_info_addr;
+	uint32_t compact_dyld_image_info_size;
 };
 
 struct dyld_all_image_infos_64 {
@@ -58,8 +64,9 @@ struct dyld_all_image_infos_64 {
 	uint32_t infoArrayCount;
 	uint64_t infoArray;
 	uint64_t notification;
-	int32_t processDetachedFromSharedRegion;
-	int32_t libSystemInitialized;
+	bool     processDetachedFromSharedRegion;
+	bool     libSystemInitialized;
+	uint32_t paddingToMakeTheSizeCorrectOn32bitAndDoesntAffect64b; // NOT PART OF DYLD_ALL_IMAGE_INFOS!
 	uint64_t dyldImageLoadAddress;
 	uint64_t jitInfo;
 	uint64_t dyldVersion;
@@ -76,6 +83,12 @@ struct dyld_all_image_infos_64 {
 	uint64_t errorTargetDylibPath;
 	uint64_t errorSymbol;
 	uint64_t sharedCacheSlide;
-	uint8_t	 sharedCacheUUID[16];
-	uint64_t reserved[16];
+	uint8_t  sharedCacheUUID[16];
+	uint64_t sharedCacheBaseAddress;
+	uint64_t infoArrayChangeTimestamp;
+	uint64_t dyldPath;
+	uint32_t notifyMachPorts[8];
+	uint64_t reserved[9];
+	uint64_t compact_dyld_image_info_addr;
+	uint64_t compact_dyld_image_info_size;
 };
