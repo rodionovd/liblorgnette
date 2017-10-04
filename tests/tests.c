@@ -159,9 +159,12 @@ main(int argc, const char * argv[])
 	test_local_linked_library_function_lookup();
 	test_pthread_set_self_lookup_image();
 
+	// TODO(rodionovd): use SecTaskAccess to allow task_for_pid() access
+#ifdef REMOTE_TESTS
 	/* Remote tests */
 	test_remote_function_lookup();
 	test_remote_function_lookup_image();
+#endif
 
 	return 0;
 }
